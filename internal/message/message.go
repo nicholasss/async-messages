@@ -8,17 +8,25 @@ import (
 	"fmt"
 )
 
+// *** Types ***
+
+// Message defines a raw message that is signed.
+// It should not be used directly.
 type Message struct {
-	To        string `json:"to"`
-	From      string `json:"from"`
-	Subject   string `json:"subject"`
-	Body      string `json:"body"`
-	Signature string `json:"sig"`
+	To        string
+	From      string
+	Subject   string
+	Body      string
+	Signature string
 }
 
-// CreateMessage create a new message object and hashes a valid signature
+// *** Functions ***
+
+// Message Functions
+
+// NewMessage create a new message object and hashes a valid signature
 // The message object should not be altered after this function
-func CreateMessage(to, from, subject, body string, secretKey []byte) (*Message, error) {
+func NewMessage(to, from, subject, body string, secretKey []byte) (*Message, error) {
 	if to == "" || from == "" || subject == "" || body == "" {
 		return nil, fmt.Errorf("empty message property of 'to', 'from', 'subject', or 'body'")
 	}

@@ -41,7 +41,7 @@ func TestCreateMessage(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		msg, err := CreateMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
+		msg, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
 		if err != nil {
 			t.Errorf("case: %q\nwas not able to create message due to: %q", tc.caseName, err)
 		}
@@ -107,7 +107,7 @@ func TestEmptyPropertyMessages(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		_, err := CreateMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
+		_, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
 		if err == nil {
 			t.Errorf("case: %q\nwas not able to create message due to: %q", tc.caseName, err)
 		}
@@ -151,7 +151,7 @@ func TestVerifySignatures(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		msg, err := CreateMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
+		msg, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
 		if err != nil {
 			fmt.Printf("Should work, but didn't. Got error: %q", err)
 			t.Fail()

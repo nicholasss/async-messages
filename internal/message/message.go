@@ -13,11 +13,11 @@ import (
 // Message defines a raw message that is signed.
 // It should not be used directly.
 type Message struct {
-	To        string
-	From      string
-	Subject   string
-	Body      string
-	Signature string
+	To        string `json:"to"`
+	From      string `json:"fr"`
+	Subject   string `json:"subj"`
+	Body      string `json:"body"`
+	Signature string `json:"sign"`
 }
 
 // *** Functions ***

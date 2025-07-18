@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"log"
 )
 
 type Message struct {
@@ -43,7 +42,6 @@ func VerifyMessage(m *Message, sercretKey []byte) (bool, error) {
 
 func prepMessageForSigning(m *Message) []byte {
 	messageData := fmt.Sprintf("%s|%s|%s|%s", m.To, m.From, m.Subject, m.Body)
-	log.Println("[DEBUG] messageData:", messageData)
 	return []byte(messageData)
 }
 

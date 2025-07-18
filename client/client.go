@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -19,21 +20,35 @@ func main() {
 	secretKey := []byte(os.Getenv("HMAC_SECRET"))
 
 	c := http.DefaultClient
-	res, err := c.Get("http://localhost:8080/msg")
+
+	msg, err := message.NewMessage("Me", "Me", "Echoing message", "Hearing me ok?", secretKey)
+	if err != nil {
+		log.Printf("could not create message due to: %q", err)
+		return
+	}
+
+	bodyData, err := json.Marshal(msg)
+	if err != nil {
+		log.Printf("could not marshal data due to: %q", err)
+		return
+	}
+	bodyReader := bytes.NewBuffer(bodyData)
+
+	res, err := c.Post("http://localhost:8080/echo", "application/json", bodyReader)
 	if err != nil {
 		log.Printf("could not make request due to: %q", err)
 		return
 	}
 
-	msg := &message.Message{}
-	err = json.NewDecoder(res.Body).Decode(msg)
+	echoMsg := &message.Message{}
+	err = json.NewDecoder(res.Body).Decode(echoMsg)
 	if err != nil {
 		log.Printf("could not decode the request due to: %q", err)
 		return
 	}
 	res.Body.Close()
 
-	msgOk, err := message.VerifyMessage(msg, secretKey)
+	msgOk, err := message.VerifyMessage(echoMsg, secretKey)
 	if err != nil {
 		log.Printf("could not verify message due to: %q", err)
 		return
@@ -44,8 +59,8 @@ func main() {
 		return
 	}
 
-	log.Printf("To: %q", msg.To)
-	log.Printf("From: %q", msg.From)
-	log.Printf("Subject: %q", msg.Subject)
-	log.Printf("Body: %q", msg.Body)
+	log.Printf("To: %q", echoMsg.To)
+	log.Printf("From: %q", echoMsg.From)
+	log.Printf("Subject: %q", echoMsg.Subject)
+	log.Printf("Body: %q", echoMsg.Body)
 }

@@ -1,6 +1,7 @@
 package message
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 )
@@ -116,7 +117,7 @@ func TestEmptyPropertyMessages(t *testing.T) {
 // tests whether the signature is being computed correctly
 func TestVerifySignatures(t *testing.T) {
 	tt := []struct {
-		name      string
+		caseName  string
 		to        string
 		from      string
 		subject   string
@@ -124,39 +125,87 @@ func TestVerifySignatures(t *testing.T) {
 		signature string
 	}{
 		{
-			name: "testing that it works correctly",
-			to:   "Bob", from: "Kevin",
+			caseName:  "testing that it works correctly",
+			to:        "Bob",
+			from:      "Kevin",
 			subject:   "Re: Tuesday",
 			body:      "This is super important that we work on this tuesday.",
 			signature: "6786dea088cb7648a016f5d3736e9ee3521d7f42a4b402e063da64d51ba4d4c0",
 		},
 		{
-			name: "testing that it works correctly",
-			to:   "Kevin", from: "Bob",
+			caseName:  "testing that it works correctly",
+			to:        "Kevin",
+			from:      "Bob",
 			subject:   "Re: Re: Tuesday",
 			body:      "I am not sure that I can do tuesday though.",
 			signature: "dd5c02b3e521b5a855e7fe85806f2ad2a66948e5569c31a32bff50843530113b",
 		},
 		{
-			name: "testing that it works correctly",
-			to:   "Bob", from: "Kevin",
+			caseName:  "testing that it works correctly",
+			to:        "Bob",
+			from:      "Kevin",
 			subject:   "Re: Re: Re: Tuesday",
 			body:      "You can do tue, just let me know when on tue. I am free after lunch.",
 			signature: "bcf00b7f415f54ff1391ba5b899d39b4405e3d9bb04293d62c907bf961592c73",
 		},
 	}
 
-	for i, tc := range tt {
+	for _, tc := range tt {
 		msg, err := CreateMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
 		if err != nil {
-			fmt.Printf("- [%d] Should work, but didn't. Got error: %q", i, err)
+			fmt.Printf("Should work, but didn't. Got error: %q", err)
 			t.Fail()
 		}
 
 		_, err = verifySignature(msg, secretKey)
 		if err != nil {
-			fmt.Printf("- [%d] Should work, but didn't. Got error: %q", i, err)
+			fmt.Printf("Should work, but didn't. Got error: %q", err)
 			t.Fail()
+		}
+	}
+}
+
+func TestPrepMessageForSigning(t *testing.T) {
+	tt := []struct {
+		caseName   string
+		to         string
+		from       string
+		subject    string
+		body       string
+		preppedMsg []byte
+	}{
+		{
+			caseName:   "testing concat",
+			to:         "Bob",
+			from:       "Kevin",
+			subject:    "Re: Tuesday",
+			body:       "This is super important that we work on this tuesday.",
+			preppedMsg: []byte("Bob|Kevin|Re: Tuesday|This is super important that we work on this tuesday."),
+		},
+		{
+			caseName:   "testing concat",
+			to:         "Kevin",
+			from:       "Bob",
+			subject:    "Re: Re: Tuesday",
+			body:       "I am not sure that I can do tuesday though.",
+			preppedMsg: []byte("Kevin|Bob|Re: Re: Tuesday|I am not sure that I can do tuesday though."),
+		},
+		{
+			caseName:   "testing prep",
+			to:         "Bob",
+			from:       "Kevin",
+			subject:    "Re: Re: Re: Tuesday",
+			body:       "You can do tue, just let me know when on tue. I am free after lunch.",
+			preppedMsg: []byte("Bob|Kevin|Re: Re: Re: Tuesday|You can do tue, just let me know when on tue. I am free after lunch."),
+		},
+	}
+
+	for _, tc := range tt {
+		msg := &Message{To: tc.to, From: tc.from, Subject: tc.subject, Body: tc.body}
+		preppedMsg := prepMessageForSigning(msg)
+
+		if !bytes.Equal(tc.preppedMsg, preppedMsg) {
+			t.Errorf("case: %q\ndid not prepare message correctly. got %q, want %q", tc.caseName, preppedMsg, tc.preppedMsg)
 		}
 	}
 }

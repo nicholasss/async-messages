@@ -19,6 +19,10 @@ type Message struct {
 // CreateMessage create a new message object and hashes a valid signature
 // The message object should not be altered after this function
 func CreateMessage(to, from, subject, body string, secretKey []byte) (*Message, error) {
+	if to == "" || from == "" || subject == "" || body == "" {
+		return nil, fmt.Errorf("empty message property of 'to', 'from', 'subject', or 'body'")
+	}
+
 	newMessage := Message{To: to, From: from, Subject: subject, Body: body}
 	sig, err := createSignature(&newMessage, secretKey)
 	if err != nil {

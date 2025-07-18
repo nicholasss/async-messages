@@ -37,13 +37,6 @@ func TestCreateMessage(t *testing.T) {
 			subject:  "Re: Re: Re: Tuesday",
 			body:     "You can do tue, just let me know when on tue. I am free after lunch.",
 		},
-		{
-			caseName: "Missing 'to' field",
-			to:       "",
-			from:     "Kevin",
-			subject:  "To anyone out there...",
-			body:     "Please pass the salt.",
-		},
 	}
 
 	for _, tc := range tt {
@@ -62,6 +55,59 @@ func TestCreateMessage(t *testing.T) {
 		}
 		if msg.Body != tc.body {
 			t.Errorf("case: %q\n did not copy 'body' field. got %q want %q", tc.caseName, msg.Body, tc.body)
+		}
+	}
+}
+
+func TestEmptyPropertyMessages(t *testing.T) {
+	tt := []struct {
+		caseName string
+		to       string
+		from     string
+		subject  string
+		body     string
+	}{
+		{
+			caseName: "Missing 'to' field",
+			to:       "",
+			from:     "Kevin",
+			subject:  "To anyone out there...",
+			body:     "Please pass the salt.",
+		},
+		{
+			caseName: "Missing 'from' field",
+			to:       "Bob",
+			from:     "",
+			subject:  "To anyone out there...",
+			body:     "Please pass the salt.",
+		},
+		{
+			caseName: "Missing 'subject' field",
+			to:       "Bob",
+			from:     "Kevin",
+			subject:  "",
+			body:     "Please pass the salt.",
+		},
+		{
+			caseName: "Missing 'body' field",
+			to:       "Bob",
+			from:     "Kevin",
+			subject:  "To anyone out there...",
+			body:     "",
+		},
+		{
+			caseName: "",
+			to:       "",
+			from:     "",
+			subject:  "",
+			body:     "",
+		},
+	}
+
+	for _, tc := range tt {
+		_, err := CreateMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
+		if err == nil {
+			t.Errorf("case: %q\nwas not able to create message due to: %q", tc.caseName, err)
 		}
 	}
 }

@@ -7,7 +7,7 @@ import (
 
 var secretKey = []byte("GgfY0UssupyYBlFy92/ENsq5/Qy8dq3bh3Mp8hZcPMDEdSnxMgi5E1TPzJuHVHzRs60aq6r7gKyLGwbauaUn1Q==")
 
-// test that the messages is being composed and that signatures are being written
+// test that the function is successfully creating the message
 func TestCreateMessage(t *testing.T) {
 	tt := []struct {
 		caseName string
@@ -59,6 +59,7 @@ func TestCreateMessage(t *testing.T) {
 	}
 }
 
+// tests whether the function errors when there is a missing field
 func TestEmptyPropertyMessages(t *testing.T) {
 	tt := []struct {
 		caseName string
@@ -112,6 +113,7 @@ func TestEmptyPropertyMessages(t *testing.T) {
 	}
 }
 
+// tests whether the signature is being computed correctly
 func TestVerifySignatures(t *testing.T) {
 	tt := []struct {
 		name      string

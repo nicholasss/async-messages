@@ -43,17 +43,13 @@ func main() {
 	}
 
 	r := gin.Default()
-	r.GET("/msg", cfg.msg)
+	r.POST("/echo", cfg.echo)
 
 	r.Run()
 }
 
-func (cfg *serverConfig) msg(c *gin.Context) {
-	msg, err := message.NewMessage("You", "me", "hello", "testing, testing", cfg.secretKey)
-	if err != nil {
-		log.Printf("could not create message due to %q", err)
-		return
-	}
-
+func (cfg *serverConfig) echo(c *gin.Context) {
+	msg := &message.Message{}
+	c.Bind(msg)
 	c.JSON(200, msg)
 }

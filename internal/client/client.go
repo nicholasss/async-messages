@@ -39,6 +39,27 @@ func NewClient(name string) (*Client, error) {
 	}, nil
 }
 
+func (c *Client) checkServerIsOnline() error {
+	res, err := c.Client.Get(c.Server)
+	if err != nil {
+		return fmt.Errorf("unable to connect to server: '%d %s' due to: %w", res.StatusCode, res.Status, err)
+	}
+	defer res.Body.Close()
+
+	// explicit response check
+	resBodyBuffer := make([]byte, 0)
+	_, err = res.Body.Read(resBodyBuffer)
+	if err != nil {
+		return fmt.Errorf("unable to read body of health check response due to: %w", err)
+	}
+	if !bytes.Equal([]byte(`{"health":"200 OK"}`), resBodyBuffer) {
+		return fmt.Errorf("server health unknown: '%s'", resBodyBuffer)
+	}
+
+	// health of server ok past this point
+	return nil
+}
+
 func (c *Client) AddToQueue(msg *msg.Message) {
 	c.Queue.Enqueue(*msg)
 }

@@ -17,6 +17,7 @@ func (q *queue) IsEmpty() bool {
 	return len(q.msgs) == 0
 }
 
+// naive implementation, reallocs a slice every call
 func (q *queue) Enqueue(newMsg Message) {
 	q.msgs = append(q.msgs, newMsg)
 }

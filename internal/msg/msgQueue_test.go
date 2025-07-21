@@ -118,3 +118,42 @@ func TestSizeFunction(t *testing.T) {
 		t.Error("Unable to return size of emtpy queue as 0")
 	}
 }
+
+func BenchmarkQueueEnqueue(b *testing.B) {
+	msgExample, err := NewMessage("kevin", "bob", "important", "this is an example body", queueSecretKey)
+	if err != nil {
+		b.Errorf("Unable to create msg example due to: %q", err)
+	}
+
+	for b.Loop() {
+		queue := NewQueue()
+		for range 1000 {
+			queue.Enqueue(*msgExample)
+		}
+	}
+}
+
+func BenchmarkQueueDequeue(b *testing.B) {
+	msgExample, err := NewMessage("kevin", "bob", "important", "this is an example body", queueSecretKey)
+	if err != nil {
+		b.Errorf("Unable to create msg example due to: %q", err)
+	}
+
+	for b.Loop() {
+		// not measuring queue setup
+		b.StopTimer()
+		queue := NewQueue()
+		for range 1000 {
+			queue.Enqueue(*msgExample)
+		}
+
+		// measuring dequeue explicitly
+		b.StartTimer()
+		for range 1000 {
+			_, ok := queue.Dequeue()
+			if !ok {
+				b.Error("Unable to dequeue")
+			}
+		}
+	}
+}

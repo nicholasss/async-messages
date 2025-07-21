@@ -24,6 +24,7 @@ type Message struct {
 
 // Message Functions
 
+// ToString returns a formatted string for the message
 func (m *Message) ToString() string {
 	format := `To: %s\n
 	From: %s\n

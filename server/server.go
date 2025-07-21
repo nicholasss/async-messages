@@ -52,15 +52,11 @@ func (cfg *serverConfig) echo(c *gin.Context) {
 	clientMsg := &msg.Message{}
 	c.Bind(clientMsg)
 
-	ok, err := msg.VerifyMessage(clientMsg, cfg.secretKey)
+	err := msg.VerifyMessage(clientMsg, cfg.secretKey)
 	if err != nil {
 		log.Printf("unable to verify message due to: %q", err)
 		return
 	}
-	if !ok {
-		log.Printf("incoming message is not valid")
-		return
-	}
 
-	c.JSON(200, clientMsg)
+	c.Status(200)
 }

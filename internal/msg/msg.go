@@ -14,10 +14,10 @@ import (
 // It should not be used directly.
 type Message struct {
 	To        string `json:"to"`
-	From      string `json:"fr"`
-	Subject   string `json:"subj"`
+	From      string `json:"from"`
+	Subject   string `json:"subject"`
 	Body      string `json:"body"`
-	Signature string `json:"sign"`
+	Signature string `json:"signature"`
 }
 
 // *** Functions ***

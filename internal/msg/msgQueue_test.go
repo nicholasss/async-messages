@@ -4,6 +4,17 @@ import "testing"
 
 var queueSecretKey = []byte("GgfY0UssupyYBlFy92/ENsq5/Qy8dq3bh3Mp8hZcPMDEdSnxMgi5E1TPzJuHVHzRs60aq6r7gKyLGwbauaUn1Q==")
 
+func TestEmptyQueue(t *testing.T) {
+	// should be empty on creation
+	queue := NewQueue()
+	if queue.IsEmpty() != true {
+		t.Errorf("Queue should be empty on creation")
+	}
+	if queue.Size() != 0 {
+		t.Errorf("Queue should be emtpy on creation")
+	}
+}
+
 func TestSizeFunction(t *testing.T) {
 	rawMsgs := []struct {
 		to      string
@@ -40,20 +51,70 @@ func TestSizeFunction(t *testing.T) {
 		packagedMsgs = append(packagedMsgs, *msg)
 	}
 
-	// should be empty on creation
 	queue := NewQueue()
-	if queue.IsEmpty() != true {
-		t.Errorf("Queue should be empty on creation")
-	}
-	if queue.Size() != 0 {
-		t.Errorf("Queue should be emtpy on creation")
-	}
 
 	queue.Enqueue(packagedMsgs[0])
 	if queue.IsEmpty() != false {
-		t.Errorf("Queue should not be empty after enqueue")
+		t.Error("Queue should not be empty after enqueue")
 	}
 	if queue.Size() != 1 {
-		t.Errorf("Queue should contain one item after enqueue")
+		t.Error("Queue should contain one item")
+	}
+
+	queue.Enqueue(packagedMsgs[1])
+	if queue.IsEmpty() != false {
+		t.Error("Queue should not be empty after enqueue")
+	}
+	if queue.Size() != 2 {
+		t.Error("Queue should contain two items")
+	}
+
+	queue.Enqueue(packagedMsgs[2])
+	if queue.IsEmpty() != false {
+		t.Error("Queue should not be empty after enqueue")
+	}
+	if queue.Size() != 3 {
+		t.Error("Queue should contain three items")
+	}
+
+	msg1, ok := queue.Dequeue()
+	if !ok {
+		t.Error("Unable to dequeue message")
+	}
+	if msg1 != packagedMsgs[0] {
+		t.Errorf("Unable to dequeue correct message. got=%q want=%q", msg1.ToString(), packagedMsgs[0].ToString())
+	}
+	if queue.Size() != 2 {
+		t.Error("Queue should contain two items")
+	}
+
+	msg2, ok := queue.Dequeue()
+	if !ok {
+		t.Error("Unable to dequeue message")
+	}
+	if msg2 != packagedMsgs[1] {
+		t.Errorf("Unable to dequeue correct message. got=%q want=%q", msg2.ToString(), packagedMsgs[2].ToString())
+	}
+	if queue.Size() != 1 {
+		t.Error("Queue should contain one item")
+	}
+
+	msg3, ok := queue.Dequeue()
+	if !ok {
+		t.Error("Unable to dequeue message")
+	}
+	if msg3 != packagedMsgs[2] {
+		t.Errorf("Unable to dequeue correct message. got=%q want=%q", msg3.ToString(), packagedMsgs[3].ToString())
+	}
+
+	_, ok = queue.Dequeue()
+	if ok {
+		t.Error("Dequeue-ing an empty queue should not be ok")
+	}
+	if queue.IsEmpty() != true {
+		t.Error("Unable to fully dequeue queue")
+	}
+	if queue.Size() != 0 {
+		t.Error("Unable to return size of emtpy queue as 0")
 	}
 }

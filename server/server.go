@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/nicholasss/async-messages/internal/message"
+	"github.com/nicholasss/async-messages/internal/msg"
 )
 
 // *** Server Config ***
@@ -49,10 +49,10 @@ func main() {
 }
 
 func (cfg *serverConfig) echo(c *gin.Context) {
-	msg := &message.Message{}
-	c.Bind(msg)
+	clientMsg := &msg.Message{}
+	c.Bind(clientMsg)
 
-	ok, err := message.VerifyMessage(msg, cfg.secretKey)
+	ok, err := msg.VerifyMessage(clientMsg, cfg.secretKey)
 	if err != nil {
 		log.Printf("unable to verify message due to: %q", err)
 		return
@@ -62,5 +62,5 @@ func (cfg *serverConfig) echo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, msg)
+	c.JSON(200, clientMsg)
 }

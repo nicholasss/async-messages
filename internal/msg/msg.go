@@ -1,5 +1,5 @@
-// Package message implements common message functions and types
-package message
+// Package msg implements common message functions and types
+package msg
 
 import (
 	"crypto/hmac"

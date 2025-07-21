@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/nicholasss/async-messages/internal/message"
+	"github.com/nicholasss/async-messages/internal/msg"
 )
 
 func main() {
@@ -21,13 +21,13 @@ func main() {
 
 	c := http.DefaultClient
 
-	msg, err := message.NewMessage("Me", "Me", "Echoing message", "Hearing me ok?", secretKey)
+	testMsg, err := msg.NewMessage("Me", "Me", "Echoing message", "Hearing me ok?", secretKey)
 	if err != nil {
 		log.Printf("could not create message due to: %q", err)
 		return
 	}
 
-	bodyData, err := json.Marshal(msg)
+	bodyData, err := json.Marshal(testMsg)
 	if err != nil {
 		log.Printf("could not marshal data due to: %q", err)
 		return
@@ -40,7 +40,7 @@ func main() {
 		return
 	}
 
-	echoMsg := &message.Message{}
+	echoMsg := &msg.Message{}
 	err = json.NewDecoder(res.Body).Decode(echoMsg)
 	if err != nil {
 		log.Printf("could not decode the request due to: %q", err)
@@ -48,7 +48,7 @@ func main() {
 	}
 	res.Body.Close()
 
-	msgOk, err := message.VerifyMessage(echoMsg, secretKey)
+	msgOk, err := msg.VerifyMessage(echoMsg, secretKey)
 	if err != nil {
 		log.Printf("could not verify message due to: %q", err)
 		return

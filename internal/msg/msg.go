@@ -24,6 +24,16 @@ type Message struct {
 
 // Message Functions
 
+func (m *Message) ToString() string {
+	format := `To: %s\n
+	From: %s\n
+	Subject: %s\n
+	Body: %s\n
+	Signature: %s\n
+	`
+	return fmt.Sprintf(format, m.To, m.From, m.Subject, m.Body, m.Signature)
+}
+
 // NewMessage create a new message object and hashes a valid signature
 // The message object should not be altered after this function
 func NewMessage(to, from, subject, body string, secretKey []byte) (*Message, error) {

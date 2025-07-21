@@ -26,12 +26,7 @@ type Message struct {
 
 // ToString returns a formatted string for the message
 func (m *Message) ToString() string {
-	format := `To: %s\n
-	From: %s\n
-	Subject: %s\n
-	Body: %s\n
-	Signature: %s\n
-	`
+	format := "To: %s\nFrom: %s\nSubject: %s\nBody: %s\nSignature: %s\n"
 	return fmt.Sprintf(format, m.To, m.From, m.Subject, m.Body, m.Signature)
 }
 

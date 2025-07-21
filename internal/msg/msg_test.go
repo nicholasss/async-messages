@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var secretKey = []byte("GgfY0UssupyYBlFy92/ENsq5/Qy8dq3bh3Mp8hZcPMDEdSnxMgi5E1TPzJuHVHzRs60aq6r7gKyLGwbauaUn1Q==")
+var msgSecretKey = []byte("GgfY0UssupyYBlFy92/ENsq5/Qy8dq3bh3Mp8hZcPMDEdSnxMgi5E1TPzJuHVHzRs60aq6r7gKyLGwbauaUn1Q==")
 
 // test that the function is successfully creating the message
 func TestCreateMessage(t *testing.T) {
@@ -41,7 +41,7 @@ func TestCreateMessage(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		msg, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
+		msg, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, msgSecretKey)
 		if err != nil {
 			t.Errorf("case: %q\nwas not able to create message due to: %q", tc.caseName, err)
 		}
@@ -107,7 +107,7 @@ func TestEmptyPropertyMessages(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		_, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
+		_, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, msgSecretKey)
 		if err == nil {
 			t.Errorf("case: %q\nwas not able to create message due to: %q", tc.caseName, err)
 		}
@@ -151,13 +151,13 @@ func TestVerifySignatures(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		msg, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, secretKey)
+		msg, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, msgSecretKey)
 		if err != nil {
 			fmt.Printf("Should work, but didn't. Got error: %q", err)
 			t.Fail()
 		}
 
-		_, err = verifySignature(msg, secretKey)
+		_, err = verifySignature(msg, msgSecretKey)
 		if err != nil {
 			fmt.Printf("Should work, but didn't. Got error: %q", err)
 			t.Fail()

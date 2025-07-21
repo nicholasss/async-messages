@@ -26,8 +26,8 @@ type Message struct {
 
 // ToString returns a formatted string for the message
 func (m *Message) ToString() string {
-	format := "To: %s\nFrom: %s\nSubject: %s\nBody: %s\nSignature: %s\n"
-	return fmt.Sprintf(format, m.To, m.From, m.Subject, m.Body, m.Signature)
+	template := "To: %s\nFrom: %s\nSubject: %s\nBody: %s\nSignature: %s\n"
+	return fmt.Sprintf(template, m.To, m.From, m.Subject, m.Body, m.Signature)
 }
 
 // NewMessage create a new message object and hashes a valid signature

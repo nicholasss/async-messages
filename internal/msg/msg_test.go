@@ -60,6 +60,51 @@ func TestCreateMessage(t *testing.T) {
 	}
 }
 
+// tests whether the ToString() function works as intended
+func TestToString(t *testing.T) {
+	tt := []struct {
+		to           string
+		from         string
+		subject      string
+		body         string
+		toStringWant string
+	}{
+		{
+			to:           "Bob",
+			from:         "Kevin",
+			subject:      "Re: Tuesday",
+			body:         "This is super important that we work on this tuesday.",
+			toStringWant: "To: Bob\nFrom: Kevin\nSubject: Re: Tuesday\nBody: This is super important that we work on this tuesday.\nSignature: 6786dea088cb7648a016f5d3736e9ee3521d7f42a4b402e063da64d51ba4d4c0\n",
+		},
+		{
+			to:           "Kevin",
+			from:         "Bob",
+			subject:      "Re: Re: Tuesday",
+			body:         "I am not sure that I can do tuesday though.",
+			toStringWant: "To: Kevin\nFrom: Bob\nSubject: Re: Re: Tuesday\nBody: I am not sure that I can do tuesday though.\nSignature: dd5c02b3e521b5a855e7fe85806f2ad2a66948e5569c31a32bff50843530113b\n",
+		},
+		{
+			to:           "Bob",
+			from:         "Kevin",
+			subject:      "Re: Re: Re: Tuesday",
+			body:         "You can do tue, just let me know when on tue. I am free after lunch.",
+			toStringWant: "To: Bob\nFrom: Kevin\nSubject: Re: Re: Re: Tuesday\nBody: You can do tue, just let me know when on tue. I am free after lunch.\nSignature: bcf00b7f415f54ff1391ba5b899d39b4405e3d9bb04293d62c907bf961592c73\n",
+		},
+	}
+
+	for _, tc := range tt {
+		msg, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, msgSecretKey)
+		if err != nil {
+			t.Errorf("was not able to create message due to: %q", err)
+		}
+
+		toStringGot := msg.ToString()
+		if toStringGot != tc.toStringWant {
+			t.Errorf("was not able to convert message to string successfully. got=%q, want=%q", toStringGot, tc.toStringWant)
+		}
+	}
+}
+
 // tests whether the function errors when there is a missing field
 func TestEmptyPropertyMessages(t *testing.T) {
 	tt := []struct {

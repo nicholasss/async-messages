@@ -202,7 +202,7 @@ func TestVerifySignatures(t *testing.T) {
 			t.Fail()
 		}
 
-		_, err = verifySignature(msg, msgSecretKey)
+		err = verifySignature(msg, msgSecretKey)
 		if err != nil {
 			fmt.Printf("Should work, but didn't. Got error: %q", err)
 			t.Fail()

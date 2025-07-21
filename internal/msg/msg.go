@@ -5,6 +5,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 )
 
@@ -50,7 +51,7 @@ func NewMessage(to, from, subject, body string, secretKey []byte) (*Message, err
 // VerifyMessage verifies the signature on the received message
 // The message object should not be altered before this function
 func VerifyMessage(m *Message, sercretKey []byte) error {
-	ok, err := verifySignature(m, sercretKey)
+	err := verifySignature(m, sercretKey)
 	if err != nil {
 		return fmt.Errorf("failed to verify message: %w", err)
 	}
@@ -81,23 +82,27 @@ func createSignature(m *Message, secretKey []byte) (string, error) {
 }
 
 // verify the signature within a message
-func verifySignature(m *Message, secretKey []byte) (bool, error) {
+func verifySignature(m *Message, secretKey []byte) error {
 	messageData := prepMessageForSigning(m)
 
 	// recalculate hash using message
 	h := hmac.New(sha256.New, secretKey)
 	_, err := h.Write([]byte(messageData))
 	if err != nil {
-		return false, fmt.Errorf("failed to write message to hmac: %w", err)
+		return fmt.Errorf("failed to write message to hmac: %w", err)
 	}
 	calulatedSignatureData := h.Sum(nil)
 
 	// decode the hash from the message
 	receivedSignatureData, err := hex.DecodeString(m.Signature)
 	if err != nil {
-		return false, fmt.Errorf("failed to decode recieved signature: %w", err)
+		return fmt.Errorf("failed to decode recieved signature: %w", err)
 	}
 
 	// securely perform comparison of signatures
-	return hmac.Equal(calulatedSignatureData, receivedSignatureData), nil
+	if hmac.Equal(calulatedSignatureData, receivedSignatureData) {
+		return nil
+	} else {
+		return errors.New("signatures do not match")
+	}
 }

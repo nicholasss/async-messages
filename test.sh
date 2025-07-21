@@ -4,4 +4,4 @@
 
 printf "=====================\n Performing Go Tests\n=====================\n\n"
 
-go test ./...
+go test ./... -cover

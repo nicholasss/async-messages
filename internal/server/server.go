@@ -41,8 +41,14 @@ func LoadConfig() (*Config, error) {
 func (cfg *Config) SetupGinEngine() (*gin.Engine, error) {
 	r := gin.Default()
 
+	// allow clients to check health of server
 	r.GET("/health", cfg.health)
+
+	// allow clients to send messages
 	r.POST("/send-message", cfg.sendMessage)
+
+	// allow clients to check for messages
+	// r.GET("/check-messages", cfg.checkMessages)
 
 	return r, nil
 }

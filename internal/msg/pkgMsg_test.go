@@ -26,6 +26,7 @@ func TestStringOfPackagedMessage(t *testing.T) {
 				Subject:   "Strong currents ahead",
 				Body:      "There are strong currents ahead, ~5nm NE of our position.",
 				Signature: "e9d99039e92f5f0adb162e2f9fa44e3f61356df0",
+				// not real signatures
 			},
 			wantString: "To: Bob@Snow\nFrom: Kevin@Liberty\nSubject: Strong currents ahead\nBody: There are strong currents ahead, ~5nm NE of our position.\nSignature: e9d99039e92f5f0adb162e2f9fa44e3f61356df0\n",
 		},
@@ -42,6 +43,7 @@ func TestStringOfPackagedMessage(t *testing.T) {
 				Subject:   "Roger",
 				Body:      "We will slow to below 4kt and watch our drifting. Thanks.",
 				Signature: "e9d99039e92f5f0adb162e2f9fa44e3f61356df0",
+				// not real signatures
 			},
 			wantString: "To: Kevin@Liberty\nFrom: Bob@Snow\nSubject: Roger\nBody: We will slow to below 4kt and watch our drifting. Thanks.\nSignature: e9d99039e92f5f0adb162e2f9fa44e3f61356df0\n",
 		},

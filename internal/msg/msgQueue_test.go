@@ -15,96 +15,118 @@ func TestEmptyQueue(t *testing.T) {
 	}
 }
 
-func TestDumpToString(t *testing.T) {
-	rawMsgs := []struct {
-		to      string
-		from    string
-		subject string
-		body    string
+func TestQueueSummary(t *testing.T) {
+	tt := []struct {
+		rawMsg RawMessage
 	}{
 		{
-			to:      "Bob",
-			from:    "Kevin",
-			subject: "Re: Tuesday",
-			body:    "This is super important that we work on this tuesday.",
+			rawMsg: RawMessage{
+				ToName:     "Bob",
+				ToVessel:   "Snow",
+				FromName:   "Kevin",
+				FromVessel: "Liberty",
+				Subject:    "Tuesday",
+				Body:       "I am planning on proceeding on tuesday since there is a break in the weather",
+			},
 		},
 		{
-			to:      "Kevin",
-			from:    "Bob",
-			subject: "Re: Re: Tuesday",
-			body:    "I am not sure that I can do tuesday though.",
+			rawMsg: RawMessage{
+				ToName:     "Kevin",
+				ToVessel:   "Liberty",
+				FromName:   "Bob",
+				FromVessel: "Snow",
+				Subject:    "Re: Tuesday",
+				Body:       "I will need to wait longer because of needed repair work. Hope to catch up.",
+			},
 		},
 		{
-			to:      "Bob",
-			from:    "Kevin",
-			subject: "Re: Re: Re: Tuesday",
-			body:    "You can do tue, just let me know when on tue. I am free after lunch.",
+			rawMsg: RawMessage{
+				ToName:     "Bob",
+				ToVessel:   "Snow",
+				FromName:   "Kevin",
+				FromVessel: "Liberty",
+				Subject:    "Re: Re: Tuesday",
+				Body:       "Good idea. Take your time. I will send out a message when we get into Cambridge Bay.",
+			},
 		},
 	}
 
-	wantQueueDump := "Number of messages in queue: 3\nSubjects: Re: Tuesday || Re: Re: Tuesday || Re: Re: Re: Tuesday\n"
+	wantQueueSummary := "3 messages in queue\nMessage subjects: Tuesday || Re: Tuesday || Re: Re: Tuesday\n"
 
-	packagedMsgs := make([]Message, 0)
-	for _, rawMsg := range rawMsgs {
-		msg, err := NewMessage(rawMsg.to, rawMsg.from, rawMsg.subject, rawMsg.body, queueSecretKey)
+	// packaging messages
+	msgs := make([]PackagedMessage, 0)
+	for _, tc := range tt {
+		msg, err := tc.rawMsg.ToPackagedMessage(queueSecretKey)
 		if err != nil {
 			t.Errorf("Unable to make new message due to: %q", err)
 		}
 
-		packagedMsgs = append(packagedMsgs, *msg)
+		msgs = append(msgs, *msg)
 	}
 
+	// adding to queue
 	queue := NewQueue()
-	for _, packagedMsg := range packagedMsgs {
+	for _, packagedMsg := range msgs {
 		queue.Enqueue(packagedMsg)
 	}
 
-	gotQueueDump := queue.DumpToString()
-
-	if wantQueueDump != gotQueueDump {
-		t.Errorf("queue dump does not match. got=%q want=%q", gotQueueDump, wantQueueDump)
+	// performing test
+	gotQueueSummary := queue.QueueSummary()
+	if wantQueueSummary != gotQueueSummary {
+		t.Errorf("queue dump does not match. got=%q want=%q", gotQueueSummary, wantQueueSummary)
 	}
 }
 
 func TestSizeAndEnqueueDequeueFunction(t *testing.T) {
-	rawMsgs := []struct {
-		to      string
-		from    string
-		subject string
-		body    string
+	tt := []struct {
+		rawMsg RawMessage
 	}{
 		{
-			to:      "Bob",
-			from:    "Kevin",
-			subject: "Re: Tuesday",
-			body:    "This is super important that we work on this tuesday.",
+			rawMsg: RawMessage{
+				ToName:     "Bob",
+				ToVessel:   "Snow",
+				FromName:   "Kevin",
+				FromVessel: "Liberty",
+				Subject:    "Tuesday",
+				Body:       "I am planning on proceeding on tuesday since there is a break in the weather",
+			},
 		},
 		{
-			to:      "Kevin",
-			from:    "Bob",
-			subject: "Re: Re: Tuesday",
-			body:    "I am not sure that I can do tuesday though.",
+			rawMsg: RawMessage{
+				ToName:     "Kevin",
+				ToVessel:   "Liberty",
+				FromName:   "Bob",
+				FromVessel: "Snow",
+				Subject:    "Re: Tuesday",
+				Body:       "I will need to wait longer because of needed repair work. Hope to catch up.",
+			},
 		},
 		{
-			to:      "Bob",
-			from:    "Kevin",
-			subject: "Re: Re: Re: Tuesday",
-			body:    "You can do tue, just let me know when on tue. I am free after lunch.",
+			rawMsg: RawMessage{
+				ToName:     "Bob",
+				ToVessel:   "Snow",
+				FromName:   "Kevin",
+				FromVessel: "Liberty",
+				Subject:    "Re: Re: Tuesday",
+				Body:       "Good idea. Take your time. I will send out a message when we get into Cambridge Bay.",
+			},
 		},
 	}
-	packagedMsgs := make([]Message, 0)
-	for _, rawMsg := range rawMsgs {
-		msg, err := NewMessage(rawMsg.to, rawMsg.from, rawMsg.subject, rawMsg.body, queueSecretKey)
+
+	// packaging messages
+	msgs := make([]PackagedMessage, 0)
+	for _, tc := range tt {
+		msg, err := tc.rawMsg.ToPackagedMessage(queueSecretKey)
 		if err != nil {
 			t.Errorf("Unable to make new message due to: %q", err)
 		}
 
-		packagedMsgs = append(packagedMsgs, *msg)
+		msgs = append(msgs, *msg)
 	}
 
+	// create queue and enqueue first
 	queue := NewQueue()
-
-	queue.Enqueue(packagedMsgs[0])
+	queue.Enqueue(msgs[0])
 	if queue.IsEmpty() != false {
 		t.Error("Queue should not be empty after enqueue")
 	}
@@ -112,7 +134,8 @@ func TestSizeAndEnqueueDequeueFunction(t *testing.T) {
 		t.Error("Queue should contain one item")
 	}
 
-	queue.Enqueue(packagedMsgs[1])
+	// enqueue second
+	queue.Enqueue(msgs[1])
 	if queue.IsEmpty() != false {
 		t.Error("Queue should not be empty after enqueue")
 	}
@@ -120,7 +143,8 @@ func TestSizeAndEnqueueDequeueFunction(t *testing.T) {
 		t.Error("Queue should contain two items")
 	}
 
-	queue.Enqueue(packagedMsgs[2])
+	// enqueue third
+	queue.Enqueue(msgs[2])
 	if queue.IsEmpty() != false {
 		t.Error("Queue should not be empty after enqueue")
 	}
@@ -128,36 +152,40 @@ func TestSizeAndEnqueueDequeueFunction(t *testing.T) {
 		t.Error("Queue should contain three items")
 	}
 
+	// dequeue first
 	msg1, ok := queue.Dequeue()
 	if !ok {
 		t.Error("Unable to dequeue message")
 	}
-	if msg1 != packagedMsgs[0] {
-		t.Errorf("Unable to dequeue correct message. got=%q want=%q", msg1.ToString(), packagedMsgs[0].ToString())
+	if msg1 != msgs[0] {
+		t.Errorf("Unable to dequeue correct message. got=%q want=%q", msg1.String(), msgs[0].String())
 	}
 	if queue.Size() != 2 {
 		t.Error("Queue should contain two items")
 	}
 
+	// dequeue second
 	msg2, ok := queue.Dequeue()
 	if !ok {
 		t.Error("Unable to dequeue message")
 	}
-	if msg2 != packagedMsgs[1] {
-		t.Errorf("Unable to dequeue correct message. got=%q want=%q", msg2.ToString(), packagedMsgs[2].ToString())
+	if msg2 != msgs[1] {
+		t.Errorf("Unable to dequeue correct message. got=%q want=%q", msg2.String(), msgs[2].String())
 	}
 	if queue.Size() != 1 {
 		t.Error("Queue should contain one item")
 	}
 
+	// dequeue third
 	msg3, ok := queue.Dequeue()
 	if !ok {
 		t.Error("Unable to dequeue message")
 	}
-	if msg3 != packagedMsgs[2] {
-		t.Errorf("Unable to dequeue correct message. got=%q want=%q", msg3.ToString(), packagedMsgs[3].ToString())
+	if msg3 != msgs[2] {
+		t.Errorf("Unable to dequeue correct message. got=%q want=%q", msg3.String(), msgs[3].String())
 	}
 
+	// attempting to dequeue empty queue
 	_, ok = queue.Dequeue()
 	if ok {
 		t.Error("Dequeue-ing an empty queue should not be ok")
@@ -170,41 +198,43 @@ func TestSizeAndEnqueueDequeueFunction(t *testing.T) {
 	}
 }
 
-func BenchmarkQueueEnqueue(b *testing.B) {
-	msgExample, err := NewMessage("kevin", "bob", "important", "this is an example body", queueSecretKey)
-	if err != nil {
-		b.Errorf("Unable to create msg example due to: %q", err)
-	}
-
-	for b.Loop() {
-		queue := NewQueue()
-		for range 1000 {
-			queue.Enqueue(*msgExample)
-		}
-	}
-}
-
-func BenchmarkQueueDequeue(b *testing.B) {
-	msgExample, err := NewMessage("kevin", "bob", "important", "this is an example body", queueSecretKey)
-	if err != nil {
-		b.Errorf("Unable to create msg example due to: %q", err)
-	}
-
-	for b.Loop() {
-		// not measuring queue setup
-		b.StopTimer()
-		queue := NewQueue()
-		for range 1000 {
-			queue.Enqueue(*msgExample)
-		}
-
-		// measuring dequeue explicitly
-		b.StartTimer()
-		for range 1000 {
-			_, ok := queue.Dequeue()
-			if !ok {
-				b.Error("Unable to dequeue")
-			}
-		}
-	}
-}
+// old benchmark code
+//
+// func BenchmarkQueueEnqueue(b *testing.B) {
+// 	msgExample, err := NewMessage("kevin", "bob", "important", "this is an example body", queueSecretKey)
+// 	if err != nil {
+// 		b.Errorf("Unable to create msg example due to: %q", err)
+// 	}
+//
+// 	for b.Loop() {
+// 		queue := NewQueue()
+// 		for range 1000 {
+// 			queue.Enqueue(*msgExample)
+// 		}
+// 	}
+// }
+//
+// func BenchmarkQueueDequeue(b *testing.B) {
+// 	msgExample, err := NewMessage("kevin", "bob", "important", "this is an example body", queueSecretKey)
+// 	if err != nil {
+// 		b.Errorf("Unable to create msg example due to: %q", err)
+// 	}
+//
+// 	for b.Loop() {
+// 		// not measuring queue setup
+// 		b.StopTimer()
+// 		queue := NewQueue()
+// 		for range 1000 {
+// 			queue.Enqueue(*msgExample)
+// 		}
+//
+// 		// measuring dequeue explicitly
+// 		b.StartTimer()
+// 		for range 1000 {
+// 			_, ok := queue.Dequeue()
+// 			if !ok {
+// 				b.Error("Unable to dequeue")
+// 			}
+// 		}
+// 	}
+// }

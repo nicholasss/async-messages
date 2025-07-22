@@ -25,7 +25,7 @@ type RawMessage struct {
 
 // *** Functions ***
 
-// ToPackageMessage takes a raw message and performs operations needed to package it into a packaged message
+// ToPackagedMessage takes a raw message and performs operations needed to package it into a packaged message
 func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, error) {
 	// TODO: perform validation of fields and not just 'not empty'
 	if rawMsg.ToName == "" || rawMsg.ToVessel == "" {

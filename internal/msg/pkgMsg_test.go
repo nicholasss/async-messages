@@ -23,10 +23,11 @@ func TestStringOfPackagedMessage(t *testing.T) {
 					Name:   "Kevin",
 					Vessel: "Liberty",
 				},
-				Subject: "Strong currents ahead",
-				Body:    "There are strong currents ahead, ~5nm NE of our position.",
+				Subject:   "Strong currents ahead",
+				Body:      "There are strong currents ahead, ~5nm NE of our position.",
+				Signature: "",
 			},
-			wantString: "To: Bob@Snow\nFrom: Kevin@Liberty\nSubject: Strong currents ahead\nBody: There are strong currents ahead, ~5nm NE of our position.\n",
+			wantString: "To: Bob@Snow\nFrom: Kevin@Liberty\nSubject: Strong currents ahead\nBody: There are strong currents ahead, ~5nm NE of our position.\nSignature: \n",
 		},
 		{
 			msg: PackagedMessage{
@@ -38,10 +39,11 @@ func TestStringOfPackagedMessage(t *testing.T) {
 					Name:   "Bob",
 					Vessel: "Snow",
 				},
-				Subject: "Roger",
-				Body:    "We will slow to below 4kt and watch our drifting. Thanks.",
+				Subject:   "Roger",
+				Body:      "We will slow to below 4kt and watch our drifting. Thanks.",
+				Signature: "",
 			},
-			wantString: "To: Kevin@Liberty\nFrom: Bob@Snow\nSubject: Roger\nBody: We will slow to below 4kt and watch our drifting. Thanks.\n",
+			wantString: "To: Kevin@Liberty\nFrom: Bob@Snow\nSubject: Roger\nBody: We will slow to below 4kt and watch our drifting. Thanks.\nSignature: \n",
 		},
 	}
 

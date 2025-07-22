@@ -31,15 +31,15 @@ type UserVessel struct {
 
 // *** Functions ***
 
-// PackagedMessage.String() returns a stringified version of the struct for printing
+// String returns a stringified version of the struct for printing
 func (m *PackagedMessage) String() string {
 	template := "To: %s\nFrom: %s\nSubject: %s\nBody: %s\nSignature: %s\n"
 	return fmt.Sprintf(template, m.To.String(), m.From.String(), m.Subject, m.Body, m.Signature)
 }
 
-// UserVessel.String() returns a stringified version of the struct for
+// String returns a stringified version of the struct for
 // for printing or use within the signature
-// should always be <user>@<vessel>
+// should always be <user>@<>
 func (uv *UserVessel) String() string {
 	return fmt.Sprintf("%s@%s", uv.Name, uv.Vessel)
 }
@@ -72,8 +72,8 @@ func (m *PackagedMessage) VerifyMessage(secretKey []byte) error {
 }
 
 // messageDataForSigning is an internal function to prepare data for creating a signature
-func (pkgMsg *PackagedMessage) messageDataForSigning() []byte {
+func (m *PackagedMessage) messageDataForSigning() []byte {
 	messageData := fmt.Sprintf("%s|%s|%s|%s",
-		pkgMsg.To.String(), pkgMsg.From.String(), pkgMsg.Subject, pkgMsg.Body)
+		m.To.String(), m.From.String(), m.Subject, m.Body)
 	return []byte(messageData)
 }

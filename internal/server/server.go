@@ -73,5 +73,9 @@ func (cfg *Config) sendMessage(c *gin.Context) {
 		return
 	}
 
+	// add to server queue
+	cfg.Queue.Enqueue(*requestMsg)
+	log.Printf("Server message queue >\n%s", cfg.Queue.DumpToString())
+
 	c.Status(200) // ok
 }

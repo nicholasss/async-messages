@@ -23,7 +23,7 @@ type RawMessage struct {
 	Body       string
 }
 
-// MissingFieldError is returning when there is a missing field
+// MissingFieldError is returned when there is a missing field
 type MissingFieldError struct {
 	Field string
 }
@@ -36,8 +36,7 @@ func (err *MissingFieldError) Error() string {
 
 // ToPackagedMessage takes a raw message and performs operations needed to package it into a packaged message
 func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, error) {
-	// TODO: perform validation of fields and not just 'not empty'
-	//
+	// checking to fields
 	if rawMsg.ToName == "" {
 		return nil, &MissingFieldError{Field: "ToName"}
 	}
@@ -49,6 +48,7 @@ func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, 
 		Vessel: strings.ToLower(rawMsg.ToVessel),
 	}
 
+	// checking from fields
 	if rawMsg.FromName == "" {
 		return nil, &MissingFieldError{Field: "FromName"}
 	}
@@ -60,6 +60,7 @@ func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, 
 		Vessel: strings.ToLower(rawMsg.FromVessel),
 	}
 
+	// checking subject
 	if rawMsg.Subject == "" {
 		return nil, &MissingFieldError{Field: "Subject"}
 	}

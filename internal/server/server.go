@@ -17,7 +17,8 @@ type HealthCheck struct {
 
 // Config holds all the configuration data
 type Config struct {
-	secretKey []byte
+	SecretKey []byte
+	Queue     *msg.Queue
 }
 
 func LoadConfig() (*Config, error) {
@@ -31,8 +32,11 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("unable to find 'HMAC_SECRET' in './.env'")
 	}
 
+	queue := msg.NewQueue()
+
 	cfg := Config{
-		secretKey: []byte(rawHMAC),
+		SecretKey: []byte(rawHMAC),
+		Queue:     queue,
 	}
 
 	return &cfg, nil
@@ -62,7 +66,7 @@ func (cfg *Config) sendMessage(c *gin.Context) {
 	requestMsg := &msg.Message{}
 	c.Bind(requestMsg)
 
-	err := requestMsg.VerifyMessage(cfg.secretKey)
+	err := requestMsg.VerifyMessage(cfg.SecretKey)
 	if err != nil {
 		log.Printf("unable to verify message due to: %q", err)
 		c.Status(400) // bad request

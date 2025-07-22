@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -122,6 +121,7 @@ func (c *Client) SendAllFromQueue() error {
 		return fmt.Errorf("server is not healthy. cannot send message due to: %w", err)
 	}
 
+	// send until queue is empty
 	for !c.Queue.IsEmpty() {
 		msgToSend, ok := c.Queue.Dequeue()
 		if !ok {
@@ -134,6 +134,5 @@ func (c *Client) SendAllFromQueue() error {
 		}
 	}
 
-	log.Print("[CLIENT] successfully sent all messages in queue")
 	return nil
 }

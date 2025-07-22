@@ -47,7 +47,7 @@ func NewClient(name string) (*Client, error) {
 func (c *Client) checkServerIsOnline() error {
 	res, err := c.Client.Get(c.Server + "/health")
 	if err != nil {
-		return fmt.Errorf("unable to connect to server: '%d %s' due to: %w", res.StatusCode, res.Status, err)
+		return fmt.Errorf("unable to connect to server due to: %w", err)
 	}
 	defer res.Body.Close()
 

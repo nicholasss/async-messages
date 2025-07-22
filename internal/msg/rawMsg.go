@@ -5,7 +5,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"time"
 )
@@ -23,27 +22,42 @@ type RawMessage struct {
 	Body       string
 }
 
+// MissingFieldError is returning when there is a missing field
+type MissingFieldError struct {
+	Field string
+}
+
+func (err *MissingFieldError) Error() string {
+	return fmt.Sprintf("field '%s' is missing from the raw message", err.Field)
+}
+
 // *** Functions ***
 
 // ToPackagedMessage takes a raw message and performs operations needed to package it into a packaged message
 func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, error) {
 	// TODO: perform validation of fields and not just 'not empty'
-	if rawMsg.ToName == "" || rawMsg.ToVessel == "" {
-		return nil, errors.New("one of the 'to' fields are empty")
+	//
+	if rawMsg.ToName == "" {
+		return nil, &MissingFieldError{Field: "ToName"}
+	}
+	if rawMsg.ToVessel == "" {
+		return nil, &MissingFieldError{Field: "ToVessel"}
 	}
 	toInfo := UserVessel{Name: rawMsg.ToName, Vessel: rawMsg.ToVessel}
 
-	if rawMsg.FromName == "" || rawMsg.FromVessel == "" {
-		return nil, errors.New("one of the 'from' fields are empty")
+	if rawMsg.FromName == "" {
+		return nil, &MissingFieldError{Field: "FromName"}
+	}
+	if rawMsg.FromVessel == "" {
+		return nil, &MissingFieldError{Field: "FromVessel"}
 	}
 	fromInfo := UserVessel{Name: rawMsg.FromName, Vessel: rawMsg.FromVessel}
 
 	if rawMsg.Subject == "" {
-		return nil, errors.New("subject field cannot be empty")
+		return nil, &MissingFieldError{Field: "Subject"}
 	}
-
 	if rawMsg.Body == "" {
-		return nil, errors.New("body field cannot be empty")
+		return nil, &MissingFieldError{Field: "Body"}
 	}
 
 	signature, err := rawMsg.createSignature(secretKey)

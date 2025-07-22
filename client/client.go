@@ -31,7 +31,7 @@ func main() {
 	c.AddToQueue(testMsg2)
 
 	// sending one of the messages
-	err = c.SendFromQueue()
+	err = c.SendAllFromQueue()
 	if err != nil {
 		log.Printf("unable to send from queue due to: %q", err)
 	} else {

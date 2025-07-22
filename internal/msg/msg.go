@@ -25,12 +25,6 @@ type Message struct {
 
 // Message Functions
 
-// ToString returns a formatted string for the message
-func (m *Message) ToString() string {
-	template := "To: %s\nFrom: %s\nSubject: %s\nBody: %s\nSignature: %s\n"
-	return fmt.Sprintf(template, m.To, m.From, m.Subject, m.Body, m.Signature)
-}
-
 // NewMessage create a new message object and hashes a valid signature
 // The message object should not be altered after this function
 func NewMessage(to, from, subject, body string, secretKey []byte) (*Message, error) {
@@ -39,7 +33,7 @@ func NewMessage(to, from, subject, body string, secretKey []byte) (*Message, err
 	}
 
 	newMessage := Message{To: to, From: from, Subject: subject, Body: body}
-	sig, err := createSignature(&newMessage, secretKey)
+	sig, err := newMessage.createSignature(secretKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create signature: %w", err)
 	}
@@ -48,10 +42,16 @@ func NewMessage(to, from, subject, body string, secretKey []byte) (*Message, err
 	return &newMessage, nil
 }
 
+// ToString returns a formatted string for the message
+func (m *Message) ToString() string {
+	template := "To: %s\nFrom: %s\nSubject: %s\nBody: %s\nSignature: %s\n"
+	return fmt.Sprintf(template, m.To, m.From, m.Subject, m.Body, m.Signature)
+}
+
 // VerifyMessage verifies the signature on the received message
 // The message object should not be altered before this function
-func VerifyMessage(m *Message, sercretKey []byte) error {
-	err := verifySignature(m, sercretKey)
+func (m *Message) VerifyMessage(sercretKey []byte) error {
+	err := m.verifySignature(sercretKey)
 	if err != nil {
 		return fmt.Errorf("failed to verify message: %w", err)
 	}
@@ -59,15 +59,15 @@ func VerifyMessage(m *Message, sercretKey []byte) error {
 	return nil
 }
 
-func prepMessageForSigning(m *Message) []byte {
+func (m *Message) messageDataForSigning() []byte {
 	messageData := fmt.Sprintf("%s|%s|%s|%s", m.To, m.From, m.Subject, m.Body)
 	return []byte(messageData)
 }
 
 // create a signature
-func createSignature(m *Message, secretKey []byte) (string, error) {
+func (m *Message) createSignature(secretKey []byte) (string, error) {
 	// prepare message data for signing
-	messageData := prepMessageForSigning(m)
+	messageData := m.messageDataForSigning()
 
 	// create hash with sha256 and secret key
 	h := hmac.New(sha256.New, secretKey)
@@ -82,8 +82,8 @@ func createSignature(m *Message, secretKey []byte) (string, error) {
 }
 
 // verify the signature within a message
-func verifySignature(m *Message, secretKey []byte) error {
-	messageData := prepMessageForSigning(m)
+func (m *Message) verifySignature(secretKey []byte) error {
+	messageData := m.messageDataForSigning()
 
 	// recalculate hash using message
 	h := hmac.New(sha256.New, secretKey)

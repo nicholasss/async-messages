@@ -202,7 +202,7 @@ func TestVerifySignatures(t *testing.T) {
 			t.Fail()
 		}
 
-		err = verifySignature(msg, msgSecretKey)
+		err = msg.verifySignature(msgSecretKey)
 		if err != nil {
 			fmt.Printf("Should work, but didn't. Got error: %q", err)
 			t.Fail()
@@ -247,10 +247,10 @@ func TestPrepMessageForSigning(t *testing.T) {
 
 	for _, tc := range tt {
 		msg := &Message{To: tc.to, From: tc.from, Subject: tc.subject, Body: tc.body}
-		preppedMsg := prepMessageForSigning(msg)
+		msgData := msg.messageDataForSigning()
 
-		if !bytes.Equal(tc.preppedMsg, preppedMsg) {
-			t.Errorf("case: %q\ndid not prepare message correctly. got %q, want %q", tc.caseName, preppedMsg, tc.preppedMsg)
+		if !bytes.Equal(tc.preppedMsg, msgData) {
+			t.Errorf("case: %q\ndid not prepare message correctly. got %q, want %q", tc.caseName, msgData, tc.preppedMsg)
 		}
 	}
 }

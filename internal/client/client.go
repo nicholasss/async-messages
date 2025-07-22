@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -69,7 +70,37 @@ func (c *Client) AddToQueue(msg *msg.Message) {
 	c.Queue.Enqueue(*msg)
 }
 
-func (c *Client) SendFromQueue() error {
+func (c *Client) sendMessage(msgToSend *msg.Message) error {
+	// verify message before sending
+	// TODO: do something with messages that have invalid signatures?
+	err := msgToSend.VerifyMessage(c.SecretKey)
+	if err != nil {
+		return err
+	}
+
+	// marshal message into buffer
+	msgData, err := json.Marshal(msgToSend)
+	if err != nil {
+		return err
+	}
+	msgDataReader := bytes.NewBuffer(msgData)
+
+	// post message
+	res, err := c.Client.Post(c.Server+"/send-message", "application/json", msgDataReader)
+	if err != nil {
+		return err
+	}
+
+	// check return status
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return fmt.Errorf("attempted to send message. response status code of '%s %d'", res.Status, res.StatusCode)
+	}
+
+	// successful send
+	return nil
+}
+
+func (c *Client) SendOneFromQueue() error {
 	err := c.checkServerIsOnline()
 	if err != nil {
 		return fmt.Errorf("server is not healthy. cannot send message due to: %w", err)
@@ -77,29 +108,32 @@ func (c *Client) SendFromQueue() error {
 
 	msgToSend, ok := c.Queue.Dequeue()
 	if !ok {
-		return errors.New("unable to send message due to issue dequeuing message")
+		return errors.New("unable to dequeue message for sending")
 	}
 
-	// verify message for sending
-	err = msg.VerifyMessage(&msgToSend, c.SecretKey)
+	c.sendMessage(&msgToSend)
+
+	return nil
+}
+
+func (c *Client) SendAllFromQueue() error {
+	err := c.checkServerIsOnline()
 	if err != nil {
-		return err
+		return fmt.Errorf("server is not healthy. cannot send message due to: %w", err)
 	}
 
-	msgData, err := json.Marshal(msgToSend)
-	if err != nil {
-		return err
-	}
-	msgDataReader := bytes.NewBuffer(msgData)
+	for !c.Queue.IsEmpty() {
+		msgToSend, ok := c.Queue.Dequeue()
+		if !ok {
+			return errors.New("unable to dequeue message for sending")
+		}
 
-	res, err := c.Client.Post(c.Server+"/send-message", "application/json", msgDataReader)
-	if err != nil {
-		return err
-	}
-
-	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return fmt.Errorf("attempted to send message. response status code of '%s %d'", res.Status, res.StatusCode)
+		err = c.sendMessage(&msgToSend)
+		if err != nil {
+			return err
+		}
 	}
 
+	log.Print("[CLIENT] successfully sent all messages in queue")
 	return nil
 }

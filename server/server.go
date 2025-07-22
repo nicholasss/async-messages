@@ -65,8 +65,9 @@ func (cfg *serverConfig) echo(c *gin.Context) {
 	err := clientMsg.VerifyMessage(cfg.secretKey)
 	if err != nil {
 		log.Printf("unable to verify message due to: %q", err)
+		c.Status(400) // bad request
 		return
 	}
 
-	c.Status(200)
+	c.Status(200) // ok
 }

@@ -34,7 +34,7 @@ type UserVessel struct {
 // PackagedMessage.String() returns a stringified version of the struct
 func (m *PackagedMessage) String() string {
 	template := "To: %s\nFrom: %s\nSubject: %s\nBody: %s\nSignature: %s\n"
-	return fmt.Sprintf(template, m.To, m.From, m.Subject, m.Body, m.Signature)
+	return fmt.Sprintf(template, m.To.String(), m.From.String(), m.Subject, m.Body, m.Signature)
 }
 
 // UserVessel.String() returns a stringified version of the struct

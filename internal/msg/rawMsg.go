@@ -64,7 +64,6 @@ func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, 
 	if rawMsg.Subject == "" {
 		return nil, &MissingFieldError{Field: "Subject"}
 	}
-	rawMsg.Subject = strings.ToLower(rawMsg.Subject)
 
 	if rawMsg.Body == "" {
 		return nil, &MissingFieldError{Field: "Body"}

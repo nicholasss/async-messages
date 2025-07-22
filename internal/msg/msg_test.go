@@ -236,7 +236,7 @@ func TestPrepMessageForSigning(t *testing.T) {
 			preppedMsg: []byte("Kevin|Bob|Re: Re: Tuesday|I am not sure that I can do tuesday though."),
 		},
 		{
-			caseName:   "testing prep",
+			caseName:   "testing conact",
 			to:         "Bob",
 			from:       "Kevin",
 			subject:    "Re: Re: Re: Tuesday",

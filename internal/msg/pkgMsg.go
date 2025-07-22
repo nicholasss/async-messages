@@ -31,13 +31,15 @@ type UserVessel struct {
 
 // *** Functions ***
 
-// PackagedMessage.String() returns a stringified version of the struct
+// PackagedMessage.String() returns a stringified version of the struct for printing
 func (m *PackagedMessage) String() string {
 	template := "To: %s\nFrom: %s\nSubject: %s\nBody: %s\nSignature: %s\n"
 	return fmt.Sprintf(template, m.To.String(), m.From.String(), m.Subject, m.Body, m.Signature)
 }
 
-// UserVessel.String() returns a stringified version of the struct
+// UserVessel.String() returns a stringified version of the struct for
+// for printing or use within the signature
+// should always be <user>@<vessel>
 func (uv *UserVessel) String() string {
 	return fmt.Sprintf("%s@%s", uv.Name, uv.Vessel)
 }

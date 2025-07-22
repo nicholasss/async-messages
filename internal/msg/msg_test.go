@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
+	"time"
 )
 
 var msgSecretKey = []byte("GgfY0UssupyYBlFy92/ENsq5/Qy8dq3bh3Mp8hZcPMDEdSnxMgi5E1TPzJuHVHzRs60aq6r7gKyLGwbauaUn1Q==")
@@ -251,6 +252,54 @@ func TestPrepMessageForSigning(t *testing.T) {
 
 		if !bytes.Equal(tc.preppedMsg, msgData) {
 			t.Errorf("case: %q\ndid not prepare message correctly. got %q, want %q", tc.caseName, msgData, tc.preppedMsg)
+		}
+	}
+}
+
+func TestMessagePackageTime(t *testing.T) {
+	tt := []struct {
+		to      string
+		from    string
+		subject string
+		body    string
+	}{
+		{
+			to:      "Bob",
+			from:    "Kevin",
+			subject: "Re: Tuesday",
+			body:    "This is super important that we work on this tuesday.",
+		},
+		{
+			to:      "Kevin",
+			from:    "Bob",
+			subject: "Re: Re: Tuesday",
+			body:    "I am not sure that I can do tuesday though.",
+		},
+		{
+			to:      "Bob",
+			from:    "Kevin",
+			subject: "Re: Re: Re: Tuesday",
+			body:    "You can do tue, just let me know when on tue. I am free after lunch.",
+		},
+	}
+
+	for _, tc := range tt {
+		msg, err := NewMessage(tc.to, tc.from, tc.subject, tc.body, msgSecretKey)
+		if err != nil {
+			t.Errorf("was not able to create message due to: %q", err)
+		}
+
+		msgPackagedGot := msg.Packaged
+		oneMinuteAgoWantAfter := time.Now().UTC().Add(-1 * time.Minute)
+
+		if msgPackagedGot.Before(oneMinuteAgoWantAfter) {
+			t.Errorf("packaged time is before one minute ago. got=%q want=%q", msgPackagedGot.UTC().String(), oneMinuteAgoWantAfter.UTC().String())
+		}
+
+		oneMinuteInFutureWantBefore := time.Now().UTC().Add(time.Minute)
+
+		if msgPackagedGot.After(oneMinuteInFutureWantBefore) {
+			t.Errorf("packaged time is after one minute in future. got=%q want=%q", msgPackagedGot.UTC().String(), oneMinuteInFutureWantBefore.UTC().String())
 		}
 	}
 }

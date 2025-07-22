@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"time"
 )
 
 // *** Types ***
@@ -14,11 +15,12 @@ import (
 // Message defines a raw message that is signed.
 // It should not be used directly.
 type Message struct {
-	To        string `json:"to"`
-	From      string `json:"from"`
-	Subject   string `json:"subject"`
-	Body      string `json:"body"`
-	Signature string `json:"signature"`
+	To        string    `json:"to"`
+	From      string    `json:"from"`
+	Subject   string    `json:"subject"`
+	Body      string    `json:"body"`
+	Signature string    `json:"signature"`
+	Packaged  time.Time `json:"packaged"`
 }
 
 // *** Functions ***
@@ -39,6 +41,8 @@ func NewMessage(to, from, subject, body string, secretKey []byte) (*Message, err
 	}
 
 	newMessage.Signature = sig
+
+	newMessage.Packaged = time.Now().UTC()
 	return &newMessage, nil
 }
 

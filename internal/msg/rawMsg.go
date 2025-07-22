@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -43,7 +44,10 @@ func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, 
 	if rawMsg.ToVessel == "" {
 		return nil, &MissingFieldError{Field: "ToVessel"}
 	}
-	toInfo := UserVessel{Name: rawMsg.ToName, Vessel: rawMsg.ToVessel}
+	toInfo := UserVessel{
+		Name:   strings.ToLower(rawMsg.ToName),
+		Vessel: strings.ToLower(rawMsg.ToVessel),
+	}
 
 	if rawMsg.FromName == "" {
 		return nil, &MissingFieldError{Field: "FromName"}
@@ -51,14 +55,20 @@ func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, 
 	if rawMsg.FromVessel == "" {
 		return nil, &MissingFieldError{Field: "FromVessel"}
 	}
-	fromInfo := UserVessel{Name: rawMsg.FromName, Vessel: rawMsg.FromVessel}
+	fromInfo := UserVessel{
+		Name:   strings.ToLower(rawMsg.FromName),
+		Vessel: strings.ToLower(rawMsg.FromVessel),
+	}
 
 	if rawMsg.Subject == "" {
 		return nil, &MissingFieldError{Field: "Subject"}
 	}
+	rawMsg.Subject = strings.ToLower(rawMsg.Subject)
+
 	if rawMsg.Body == "" {
 		return nil, &MissingFieldError{Field: "Body"}
 	}
+	// body does not get changed, as it could affect the message
 
 	signature, err := rawMsg.createSignature(secretKey)
 	if err != nil {

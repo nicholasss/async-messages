@@ -51,7 +51,7 @@ func TestQueueSummary(t *testing.T) {
 		},
 	}
 
-	wantQueueSummary := "3 messages in queue\nMessage subjects: Tuesday || Re: Tuesday || Re: Re: Tuesday\n"
+	wantQueueSummary := "3 messages in queue\nMessage subjects: tuesday || re: tuesday || re: re: tuesday\n"
 
 	// packaging messages
 	msgs := make([]PackagedMessage, 0)

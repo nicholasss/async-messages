@@ -14,17 +14,29 @@ func main() {
 		return
 	}
 
-	testMsg, err := msg.NewMessage("Me", "Me", "Echoing message", "Hearing me ok?", c.SecretKey)
+	// adding msg 1
+	testMsg1, err := msg.NewMessage("Self", "Self", "Echoing message", "Hearing me ok?", c.SecretKey)
 	if err != nil {
 		log.Printf("could not create message due to: %q", err)
 		return
 	}
+	c.AddToQueue(testMsg1)
 
-	c.AddToQueue(testMsg)
+	// adding msg 2
+	testMsg2, err := msg.NewMessage("Self", "Self", "Echoing message", "Hearing me ok?", c.SecretKey)
+	if err != nil {
+		log.Printf("could not create message due to: %q", err)
+		return
+	}
+	c.AddToQueue(testMsg2)
+
+	// sending one of the messages
 	err = c.SendFromQueue()
 	if err != nil {
 		log.Printf("unable to send from queue due to: %q", err)
 	} else {
 		log.Printf("sent queued message")
 	}
+
+	log.Printf("Queue dump >\n%s", c.Queue.DumpToString())
 }

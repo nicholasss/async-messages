@@ -13,6 +13,11 @@ import (
 	"github.com/nicholasss/async-messages/internal/msg"
 )
 
+// HealthCheck is what should be recieved from the server hitting 'GET /' endpoint
+type HealthCheck struct {
+	Health string `json:"health"`
+}
+
 type Client struct {
 	SecretKey []byte
 	Client    http.Client
@@ -35,25 +40,25 @@ func NewClient(name string) (*Client, error) {
 		Client:    *http.DefaultClient,
 		Queue:     queue,
 		Name:      name,
-		Server:    "http://localhost:8080/echo",
+		Server:    "http://localhost:8080",
 	}, nil
 }
 
 func (c *Client) checkServerIsOnline() error {
-	res, err := c.Client.Get(c.Server)
+	res, err := c.Client.Get(c.Server + "/health")
 	if err != nil {
 		return fmt.Errorf("unable to connect to server: '%d %s' due to: %w", res.StatusCode, res.Status, err)
 	}
 	defer res.Body.Close()
 
 	// explicit response check
-	resBodyBuffer := make([]byte, 0)
-	_, err = res.Body.Read(resBodyBuffer)
+	var healthRes HealthCheck
+	err = json.NewDecoder(res.Body).Decode(&healthRes)
 	if err != nil {
-		return fmt.Errorf("unable to read body of health check response due to: %w", err)
+		return fmt.Errorf("unable to decode server health response: %w", err)
 	}
-	if !bytes.Equal([]byte(`{"health":"200 OK"}`), resBodyBuffer) {
-		return fmt.Errorf("server health unknown: '%s'", resBodyBuffer)
+	if healthRes.Health != "OK" {
+		return errors.New("unable to determine health of server")
 	}
 
 	// health of server ok past this point
@@ -65,13 +70,18 @@ func (c *Client) AddToQueue(msg *msg.Message) {
 }
 
 func (c *Client) SendFromQueue() error {
+	err := c.checkServerIsOnline()
+	if err != nil {
+		return fmt.Errorf("server is not healthy. cannot send message due to: %w", err)
+	}
+
 	msgToSend, ok := c.Queue.Dequeue()
 	if !ok {
 		return errors.New("unable to send message due to issue dequeuing message")
 	}
 
 	// verify message for sending
-	err := msg.VerifyMessage(&msgToSend, c.SecretKey)
+	err = msg.VerifyMessage(&msgToSend, c.SecretKey)
 	if err != nil {
 		return err
 	}
@@ -82,7 +92,7 @@ func (c *Client) SendFromQueue() error {
 	}
 	msgDataReader := bytes.NewBuffer(msgData)
 
-	res, err := c.Client.Post(c.Server, "application/json", msgDataReader)
+	res, err := c.Client.Post(c.Server+"/send-message", "application/json", msgDataReader)
 	if err != nil {
 		return err
 	}

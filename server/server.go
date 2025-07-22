@@ -10,6 +10,10 @@ import (
 	"github.com/nicholasss/async-messages/internal/msg"
 )
 
+type HealthCheck struct {
+	Health string `json:"health"`
+}
+
 // *** Server Config ***
 
 type serverConfig struct {
@@ -43,9 +47,15 @@ func main() {
 	}
 
 	r := gin.Default()
-	r.POST("/echo", cfg.echo)
+	r.GET("/health", cfg.health)
+	r.POST("/send-message", cfg.echo)
 
 	r.Run()
+}
+
+func (cfg *serverConfig) health(c *gin.Context) {
+	healthRes := HealthCheck{Health: "OK"}
+	c.JSON(200, healthRes)
 }
 
 func (cfg *serverConfig) echo(c *gin.Context) {

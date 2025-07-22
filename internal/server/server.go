@@ -18,7 +18,7 @@ type HealthCheck struct {
 // Config holds all the configuration data
 type Config struct {
 	SecretKey []byte
-	Queue     *msg.Queue
+	Queue     *msg.PackagedQueue
 }
 
 func LoadConfig() (*Config, error) {
@@ -63,7 +63,7 @@ func (cfg *Config) health(c *gin.Context) {
 }
 
 func (cfg *Config) sendMessage(c *gin.Context) {
-	requestMsg := &msg.Message{}
+	requestMsg := &msg.PackagedMessage{}
 	c.Bind(requestMsg)
 
 	err := requestMsg.VerifyMessage(cfg.SecretKey)
@@ -75,7 +75,7 @@ func (cfg *Config) sendMessage(c *gin.Context) {
 
 	// add to server queue
 	cfg.Queue.Enqueue(*requestMsg)
-	log.Printf("Server message queue >\n%s", cfg.Queue.DumpToString())
+	log.Printf("Server message queue >\n%s", cfg.Queue.QueueSummary())
 
 	c.Status(200) // ok
 }

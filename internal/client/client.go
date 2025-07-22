@@ -18,15 +18,24 @@ type HealthCheck struct {
 	Health string `json:"health"`
 }
 
-type Client struct {
+// Config holds
+type Config struct {
 	SecretKey []byte
 	Client    http.Client
-	Queue     *msg.Queue
+	Queue     *msg.PackagedQueue
 	Name      string
+	Vessel    string
 	Server    string
 }
 
-func NewClient(name string) (*Client, error) {
+type NewMessage struct {
+	ToName   string
+	ToVessel string
+	Subject  string
+	Body     string
+}
+
+func NewClient(name, vessel string) (*Config, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
 		return nil, err
@@ -35,16 +44,17 @@ func NewClient(name string) (*Client, error) {
 
 	queue := msg.NewQueue()
 
-	return &Client{
+	return &Config{
 		SecretKey: secretKey,
 		Client:    *http.DefaultClient,
 		Queue:     queue,
 		Name:      name,
+		Vessel:    vessel,
 		Server:    "http://localhost:8080",
 	}, nil
 }
 
-func (c *Client) checkServerIsOnline() error {
+func (c *Config) checkServerIsOnline() error {
 	res, err := c.Client.Get(c.Server + "/health")
 	if err != nil {
 		return fmt.Errorf("unable to connect to server due to: %w", err)
@@ -65,20 +75,27 @@ func (c *Client) checkServerIsOnline() error {
 	return nil
 }
 
-func (c *Client) AddToQueue(msg *msg.Message) {
-	c.Queue.Enqueue(*msg)
+func (c *Config) AddToQueue(rawMsg *msg.RawMessage) error {
+	pkgMsg, err := rawMsg.ToPackagedMessage(c.SecretKey)
+	if err != nil {
+		return err
+	}
+
+	c.Queue.Enqueue(*pkgMsg)
+	return nil
 }
 
-func (c *Client) sendMessage(msgToSend *msg.Message) error {
+// internal method for sending messages
+func (c *Config) sendMessage(pkgMsg *msg.PackagedMessage) error {
 	// verify message before sending
 	// TODO: do something with messages that have invalid signatures?
-	err := msgToSend.VerifyMessage(c.SecretKey)
+	err := pkgMsg.VerifyMessage(c.SecretKey)
 	if err != nil {
 		return err
 	}
 
 	// marshal message into buffer
-	msgData, err := json.Marshal(msgToSend)
+	msgData, err := json.Marshal(pkgMsg)
 	if err != nil {
 		return err
 	}
@@ -99,7 +116,7 @@ func (c *Client) sendMessage(msgToSend *msg.Message) error {
 	return nil
 }
 
-func (c *Client) SendOneFromQueue() error {
+func (c *Config) SendOneFromQueue() error {
 	err := c.checkServerIsOnline()
 	if err != nil {
 		return fmt.Errorf("server is not healthy. cannot send message due to: %w", err)
@@ -115,7 +132,7 @@ func (c *Client) SendOneFromQueue() error {
 	return nil
 }
 
-func (c *Client) SendAllFromQueue() error {
+func (c *Config) SendAllFromQueue() error {
 	err := c.checkServerIsOnline()
 	if err != nil {
 		return fmt.Errorf("server is not healthy. cannot send message due to: %w", err)

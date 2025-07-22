@@ -42,6 +42,10 @@ func (q *Queue) Dequeue() (Message, bool) {
 }
 
 func (q *Queue) DumpToString() string {
+	if q.IsEmpty() {
+		return "Queue is empty.\n"
+	}
+
 	var subjects []string
 	for _, msg := range q.msgs {
 		subjects = append(subjects, msg.Subject)

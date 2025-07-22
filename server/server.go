@@ -1,73 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"os"
 
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"github.com/nicholasss/async-messages/internal/msg"
+	"github.com/nicholasss/async-messages/internal/server"
 )
-
-type HealthCheck struct {
-	Health string `json:"health"`
-}
-
-// *** Server Config ***
-
-type serverConfig struct {
-	secretKey []byte
-}
-
-func loadConfig() (*serverConfig, error) {
-	err := godotenv.Load(".env")
-	if err != nil {
-		return nil, fmt.Errorf("unable to load './.env'. error: %w", err)
-	}
-
-	rawHMAC := os.Getenv("HMAC_SECRET")
-	if rawHMAC == "" {
-		return nil, fmt.Errorf("unable to find 'HMAC_SECRET' in './.env'")
-	}
-
-	cfg := serverConfig{
-		secretKey: []byte(rawHMAC),
-	}
-
-	return &cfg, nil
-}
 
 // *** Main ***
 
 func main() {
-	cfg, err := loadConfig()
+	cfg, err := server.LoadConfig()
 	if err != nil {
-		log.Fatalf("Unable to load config due to: %q", err)
-	}
-
-	r := gin.Default()
-	r.GET("/health", cfg.health)
-	r.POST("/send-message", cfg.echo)
-
-	r.Run()
-}
-
-func (cfg *serverConfig) health(c *gin.Context) {
-	healthRes := HealthCheck{Health: "OK"}
-	c.JSON(200, healthRes)
-}
-
-func (cfg *serverConfig) echo(c *gin.Context) {
-	clientMsg := &msg.Message{}
-	c.Bind(clientMsg)
-
-	err := clientMsg.VerifyMessage(cfg.secretKey)
-	if err != nil {
-		log.Printf("unable to verify message due to: %q", err)
-		c.Status(400) // bad request
+		log.Printf("could not load server config due to: %q", err)
 		return
 	}
 
-	c.Status(200) // ok
+	r, err := cfg.SetupGinEngine()
+	if err != nil {
+		log.Printf("could not setup gin engine(router) due to: %q", err)
+		return
+	}
+
+	log.Fatalf("gin crashed due to: %q", r.Run())
 }

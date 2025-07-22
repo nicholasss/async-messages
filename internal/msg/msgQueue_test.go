@@ -15,7 +15,58 @@ func TestEmptyQueue(t *testing.T) {
 	}
 }
 
-func TestSizeFunction(t *testing.T) {
+func TestDumpToString(t *testing.T) {
+	rawMsgs := []struct {
+		to      string
+		from    string
+		subject string
+		body    string
+	}{
+		{
+			to:      "Bob",
+			from:    "Kevin",
+			subject: "Re: Tuesday",
+			body:    "This is super important that we work on this tuesday.",
+		},
+		{
+			to:      "Kevin",
+			from:    "Bob",
+			subject: "Re: Re: Tuesday",
+			body:    "I am not sure that I can do tuesday though.",
+		},
+		{
+			to:      "Bob",
+			from:    "Kevin",
+			subject: "Re: Re: Re: Tuesday",
+			body:    "You can do tue, just let me know when on tue. I am free after lunch.",
+		},
+	}
+
+	wantQueueDump := "Number of messages in queue: 3\nSubjects: Re: Tuesday || Re: Re: Tuesday || Re: Re: Re: Tuesday\n"
+
+	packagedMsgs := make([]Message, 0)
+	for _, rawMsg := range rawMsgs {
+		msg, err := NewMessage(rawMsg.to, rawMsg.from, rawMsg.subject, rawMsg.body, queueSecretKey)
+		if err != nil {
+			t.Errorf("Unable to make new message due to: %q", err)
+		}
+
+		packagedMsgs = append(packagedMsgs, *msg)
+	}
+
+	queue := NewQueue()
+	for _, packagedMsg := range packagedMsgs {
+		queue.Enqueue(packagedMsg)
+	}
+
+	gotQueueDump := queue.DumpToString()
+
+	if wantQueueDump != gotQueueDump {
+		t.Errorf("queue dump does not match. got=%q want=%q", gotQueueDump, wantQueueDump)
+	}
+}
+
+func TestSizeAndEnqueueDequeueFunction(t *testing.T) {
 	rawMsgs := []struct {
 		to      string
 		from    string

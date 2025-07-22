@@ -139,7 +139,7 @@ func TestToPackagedMessage(t *testing.T) {
 	}
 }
 
-func TestMessageDataForSigning(t *testing.T) {
+func TestRawMessageDataForSigning(t *testing.T) {
 	tt := []struct {
 		rawMsg          RawMessage
 		wantMessageData []byte

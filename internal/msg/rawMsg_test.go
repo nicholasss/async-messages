@@ -1,6 +1,7 @@
 package msg
 
 import (
+	"bytes"
 	"errors"
 	"testing"
 )
@@ -134,6 +135,55 @@ func TestToPackagedMessage(t *testing.T) {
 			if gotErr != nil {
 				t.Errorf("Did not expect error: got=%q", gotErr)
 			}
+		}
+	}
+}
+
+func TestMessageDataForSigning(t *testing.T) {
+	tt := []struct {
+		rawMsg          RawMessage
+		wantMessageData []byte
+	}{
+		{
+			rawMsg: RawMessage{
+				ToName:     "bob",
+				ToVessel:   "snow",
+				FromName:   "kevin",
+				FromVessel: "liberty",
+				Subject:    "Tuesday",
+				Body:       "I am planning on proceeding on tuesday since there is a break in the weather",
+			},
+			wantMessageData: []byte("bob@snow|kevin@liberty|Tuesday|I am planning on proceeding on tuesday since there is a break in the weather"),
+		},
+		{
+			rawMsg: RawMessage{
+				ToName:     "kevin",
+				ToVessel:   "liberty",
+				FromName:   "bob",
+				FromVessel: "snow",
+				Subject:    "Re: Tuesday",
+				Body:       "I will need to wait longer because of needed repair work. Hope to catch up.",
+			},
+			wantMessageData: []byte("kevin@liberty|bob@snow|Re: Tuesday|I will need to wait longer because of needed repair work. Hope to catch up."),
+		},
+		{
+			rawMsg: RawMessage{
+				ToName:     "bob",
+				ToVessel:   "snow",
+				FromName:   "kevin",
+				FromVessel: "liberty",
+				Subject:    "Re: Re: Tuesday",
+				Body:       "Good idea. Take your time. I will send out a message when we get into Cambridge Bay.",
+			},
+			wantMessageData: []byte("bob@snow|kevin@liberty|Re: Re: Tuesday|Good idea. Take your time. I will send out a message when we get into Cambridge Bay."),
+		},
+	}
+
+	for _, tc := range tt {
+		gotMessageData := tc.rawMsg.messageDataForSigning()
+
+		if !bytes.Equal(gotMessageData, tc.wantMessageData) {
+			t.Errorf("message data mismatch. got=%s want=%s", gotMessageData, tc.wantMessageData)
 		}
 	}
 }

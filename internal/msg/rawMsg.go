@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -35,7 +34,7 @@ func (err *MissingFieldError) Error() string {
 // *** Functions ***
 
 // ToPackagedMessage takes a raw message and performs operations needed to package it into a packaged message
-func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, error) {
+func (rawMsg *RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, error) {
 	// checking to fields
 	if rawMsg.ToName == "" {
 		return nil, &MissingFieldError{Field: "ToName"}
@@ -44,8 +43,8 @@ func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, 
 		return nil, &MissingFieldError{Field: "ToVessel"}
 	}
 	toInfo := UserVessel{
-		Name:   strings.ToLower(rawMsg.ToName),
-		Vessel: strings.ToLower(rawMsg.ToVessel),
+		Name:   rawMsg.ToName,
+		Vessel: rawMsg.ToVessel,
 	}
 
 	// checking from fields
@@ -56,8 +55,8 @@ func (rawMsg RawMessage) ToPackagedMessage(secretKey []byte) (*PackagedMessage, 
 		return nil, &MissingFieldError{Field: "FromVessel"}
 	}
 	fromInfo := UserVessel{
-		Name:   strings.ToLower(rawMsg.FromName),
-		Vessel: strings.ToLower(rawMsg.FromVessel),
+		Name:   rawMsg.FromName,
+		Vessel: rawMsg.FromVessel,
 	}
 
 	// checking subject

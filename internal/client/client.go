@@ -21,7 +21,6 @@ type HealthCheck struct {
 	Health string `json:"health"`
 }
 
-// Config holds
 type Config struct {
 	SecretKey []byte
 	Client    http.Client
@@ -32,16 +31,18 @@ type Config struct {
 	Online    *safeBool
 }
 
-type safeBool struct {
-	mux  sync.RWMutex
-	bool bool
-}
-
 type NewMessage struct {
 	ToName   string
 	ToVessel string
 	Subject  string
 	Body     string
+}
+
+// *** Internal Types ***
+
+type safeBool struct {
+	mux  sync.RWMutex
+	bool bool
 }
 
 // *** Errors ***
@@ -90,6 +91,7 @@ func (c *Config) StartClient() error {
 	return nil
 }
 
+// safely get the value of bool
 func (s *safeBool) getValue() bool {
 	s.mux.RLock()
 	val := s.bool
@@ -97,6 +99,7 @@ func (s *safeBool) getValue() bool {
 	return val
 }
 
+// safely set the value of bool
 func (s *safeBool) setValue(val bool) {
 	s.mux.Lock()
 	s.bool = val

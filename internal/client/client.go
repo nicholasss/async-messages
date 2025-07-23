@@ -134,6 +134,21 @@ func (c *Config) checkServerIsOnline() error {
 	return nil
 }
 
+func (c *Config) getMessagesFromServer() error {
+	// get response for specific user
+	res, err := c.Client.Get(c.Server + "/get-messages")
+	if err != nil {
+		return err
+	}
+
+	// check return status
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return fmt.Errorf("attempted to send message. response status code of '%s %d'", res.Status, res.StatusCode)
+	}
+
+	return nil
+}
+
 // WriteMessageIntoQueue crafts a message and inserts it into the clients queue.
 func (c *Config) WriteMessageIntoQueue(toName, toVessel, subject, body string) error {
 	newMessage := &msg.RawMessage{

@@ -24,7 +24,8 @@ type HealthCheck struct {
 type Config struct {
 	SecretKey []byte
 	Client    http.Client
-	Queue     *msg.PackagedQueue
+	Outbox    *msg.PackagedQueue
+	Inbox     *msg.PackagedQueue
 	Name      string
 	Vessel    string
 	Server    string
@@ -59,9 +60,12 @@ func NewClientConfig(name, vessel string) (*Config, error) {
 	}
 	secretKey := []byte(os.Getenv("HMAC_SECRET"))
 
-	queue := msg.NewQueue()
+	// inbox/outbox setup
+	outbox := msg.NewQueue()
+	inbox := msg.NewQueue()
 
-	safeBool := &safeBool{
+	// online setup
+	safeOnline := &safeBool{
 		mux:  sync.RWMutex{},
 		bool: false,
 	}
@@ -69,11 +73,12 @@ func NewClientConfig(name, vessel string) (*Config, error) {
 	return &Config{
 		SecretKey: secretKey,
 		Client:    *http.DefaultClient,
-		Queue:     queue,
+		Outbox:    outbox,
+		Inbox:     inbox,
 		Name:      name,
 		Vessel:    vessel,
 		Server:    "http://localhost:8080",
-		Online:    safeBool,
+		Online:    safeOnline,
 	}, nil
 }
 
@@ -90,18 +95,18 @@ func (c *Config) StartClient() error {
 }
 
 // safely get the value of bool
-func (s *safeBool) getValue() bool {
-	s.mux.RLock()
-	val := s.bool
-	s.mux.RLock()
+func (bo *safeBool) getValue() bool {
+	bo.mux.RLock()
+	val := bo.bool
+	bo.mux.RLock()
 	return val
 }
 
 // safely set the value of bool
-func (s *safeBool) setValue(val bool) {
-	s.mux.Lock()
-	s.bool = val
-	s.mux.Unlock()
+func (bo *safeBool) setValue(val bool) {
+	bo.mux.Lock()
+	bo.bool = val
+	bo.mux.Unlock()
 }
 
 func (c *Config) checkServerIsOnline() error {
@@ -153,7 +158,7 @@ func (c *Config) addToQueue(rawMsg *msg.RawMessage) error {
 		return err
 	}
 
-	c.Queue.Enqueue(*pkgMsg)
+	c.Outbox.Enqueue(*pkgMsg)
 	return nil
 }
 
@@ -200,7 +205,7 @@ func (c *Config) SendOneFromQueue() error {
 	}
 	// continue if online
 
-	msgToSend, ok := c.Queue.Dequeue()
+	msgToSend, ok := c.Outbox.Dequeue()
 	if !ok {
 		return errors.New("unable to dequeue message for sending")
 	}
@@ -224,8 +229,8 @@ func (c *Config) SendAllFromQueue() error {
 	}
 
 	// send until queue is empty
-	for !c.Queue.IsEmpty() {
-		msgToSend, ok := c.Queue.Dequeue()
+	for !c.Outbox.IsEmpty() {
+		msgToSend, ok := c.Outbox.Dequeue()
 		if !ok {
 			return errors.New("unable to dequeue message for sending")
 		}

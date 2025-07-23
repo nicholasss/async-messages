@@ -79,9 +79,7 @@ func NewClientConfig(name, vessel string) (*Config, error) {
 
 // *** Functions ***
 
-// StartClient will begin with checking if the server is online or not
-// then depending on the state, will start sending messages or
-// will begin queueing and checking for connectivity
+// StartClient will begin with checking if the server is online or not.
 func (c *Config) StartClient() error {
 	err := c.checkServerIsOnline()
 	if err != nil {
@@ -131,7 +129,25 @@ func (c *Config) checkServerIsOnline() error {
 	return nil
 }
 
-func (c *Config) AddToQueue(rawMsg *msg.RawMessage) error {
+// WriteMessageIntoQueue crafts a message and inserts it into the clients queue.
+func (c *Config) WriteMessageIntoQueue(toName, toVessel, subject, body string) error {
+	newMessage := &msg.RawMessage{
+		ToName:     toName,
+		ToVessel:   toVessel,
+		FromName:   c.Name,
+		FromVessel: c.Vessel,
+		Subject:    subject,
+		Body:       body,
+	}
+
+	err := c.addToQueue(newMessage)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Config) addToQueue(rawMsg *msg.RawMessage) error {
 	pkgMsg, err := rawMsg.ToPackagedMessage(c.SecretKey)
 	if err != nil {
 		return err
@@ -194,6 +210,8 @@ func (c *Config) SendOneFromQueue() error {
 	return nil
 }
 
+// SendAllFromQueue will go through the entire queue and
+// send messages until its empty.
 func (c *Config) SendAllFromQueue() error {
 	online := c.Online.getValue()
 

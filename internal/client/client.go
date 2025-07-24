@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/nicholasss/async-messages/internal/msg"
@@ -55,6 +57,15 @@ var ErrServerOffline = errors.New("server is offline")
 
 func NewClientConfig(name, vessel string) (*Config, error) {
 	err := godotenv.Load(".env")
+
+	// check if its path error, then go up a dir and try again
+	var pathError *fs.PathError
+	if errors.As(err, &pathError) {
+		os.Chdir("..")
+		err = godotenv.Load(".env")
+	}
+
+	// if it really isnt there then exit
 	if err != nil {
 		return nil, err
 	}
@@ -86,11 +97,57 @@ func NewClientConfig(name, vessel string) (*Config, error) {
 
 // StartClient will begin with checking if the server is online or not.
 func (c *Config) StartClient() error {
-	err := c.checkServerIsOnline()
+	errChan := make(chan error, 1)
+
+	go func() {
+		checkServer, err := time.ParseDuration("15s")
+		if err != nil {
+			fmt.Printf("Unable to parse duration.\n")
+			errChan <- err
+		}
+		tryCheckServer := time.NewTicker(checkServer)
+
+		// every 15 seconds check server
+		for ; ; <-tryCheckServer.C {
+			fmt.Printf("Checking server status...\n")
+
+			err := c.checkServerIsOnline()
+			if errors.Is(err, ErrServerOffline) {
+				// sleep 15 seconds if server is offline
+				fmt.Printf("Server is offline. Checking again in 15 seconds...\n")
+			} else if err != nil {
+				fmt.Printf("Not able to check server: %q\n", err)
+				errChan <- err
+			}
+		}
+	}()
+
+	go func() {
+		sendMessageDuration, err := time.ParseDuration("500ms")
+		if err != nil {
+			fmt.Printf("Unable to parse duration.\n")
+			errChan <- err
+		}
+		trySendMessage := time.NewTicker(sendMessageDuration)
+
+		// 500 ms between each tick
+		for ; ; <-trySendMessage.C {
+			online := c.Online.getValue()
+			if online {
+				fmt.Printf("Server online, TODO: sending message...\n")
+			} else {
+				fmt.Printf("Waiting for server to come back online...\n")
+			}
+
+		}
+	}()
+
+	fmt.Printf("at bottom...\n")
+
+	err := <-errChan
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -196,11 +253,13 @@ func (c *Config) sendMessage(pkgMsg *msg.PackagedMessage) error {
 	// post message
 	res, err := c.Client.Post(c.Server+"/send-message", "application/json", msgDataReader)
 	if err != nil {
+		c.Online.setValue(false)
 		return err
 	}
 
 	// check return status
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		c.Online.setValue(false)
 		return fmt.Errorf("attempted to send message. response status code of '%s %d'", res.Status, res.StatusCode)
 	}
 

@@ -98,7 +98,7 @@ func (c *Config) StartClient() error {
 func (bo *safeBool) getValue() bool {
 	bo.mux.RLock()
 	val := bo.bool
-	bo.mux.RLock()
+	bo.mux.RUnlock()
 	return val
 }
 
